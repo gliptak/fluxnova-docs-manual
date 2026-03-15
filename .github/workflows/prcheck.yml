@@ -1,0 +1,33 @@
+name: Publish site for PR
+
+on:
+  pull_request:
+
+jobs:
+  deploy-preview:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Hugo
+        uses: peaceiris/actions-hugo@v2
+        with:
+          hugo-version: '0.145.0'
+          extended: true
+
+      - name: Build site
+        run: hugo --minify --baseURL "https://${{ github.actor }}.github.io/${{ github.event.repository.name }}/pull/${{ github.event.number }}/"
+
+      - name: Deploy to PR preview
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./public
+          destination_dir: pull/${{ github.event.number }}
+
+      - run: echo "Preview URL: https://${{ github.actor }}.github.io/${{ github.event.repository.name }}/pull/${{ github.event.number }}/"
